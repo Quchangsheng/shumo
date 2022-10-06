@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pandas as pd
 import os
+import copy
 
 def read_data_from_excel(word, num):
     '''
@@ -20,8 +21,27 @@ def read_data_from_excel(word, num):
     print('读取文件路径为: ', path)
 
     data = pd.read_csv(path)
+    return data
 
-    # print(data.iloc[:3, 1])
+def get_all_data(word):
+    dict = {
+        'index': [],
+        'item_id': [],
+        'item_material': [],
+        'item_num': [],
+        'item_length': [],
+        'item_width': [],
+        'item_order': [],
+    }
+    for i in range(5):
+        data = read_data_from_excel(word, i+1)
+        data_dict = data.to_dict('list')
+        for key in data_dict.keys():
+            dict[key].extend(data_dict[key])
+    for index in range(len(dict['item_id'])):
+        dict['index'].append(index)
+
+    return dict
 
 
-read_data_from_excel('A', 1)
+get_all_data('A')

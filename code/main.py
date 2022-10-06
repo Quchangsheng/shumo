@@ -2,10 +2,8 @@
 from data.data_read import get_all_data
 from util import Item, Stack
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    all_data_dict = get_all_data('A')
 
+def get_1d_stack(all_data_dict):
     # 所有item实例化成类
     items = []
     for i in range(len(all_data_dict['item_id'])):
@@ -38,6 +36,16 @@ if __name__ == '__main__':
         else:
             # 如果没有为拼接的，则结束
             break
+
+    return stacks
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    # make all data to dict
+    all_data_dict = get_all_data('A')
+
+    # 获得1d拼接结果
+    stacks = get_1d_stack(all_data_dict)
 
     pass
 

@@ -18,11 +18,12 @@ def read_data_from_excel(word, num):
         question = 2
 
     path = os.getcwd()   # E:\比赛\数学建模\shumo\code\data
-    path = path + '\\子问题' + str(question) + '-数据集' + word + '\\data' + word + str(num) + '.csv'
+    path = path + '\\data\\子问题' + str(question) + '-数据集' + word + '\\data' + word + str(num) + '.csv'
     print('读取文件路径为: ', path)
 
     data = pd.read_csv(path)
     return data
+
 
 def get_all_data(word):
     dict = {
@@ -34,7 +35,7 @@ def get_all_data(word):
         'item_width': [],
         'item_order': [],
     }
-    for i in range(5):
+    for i in range(4):
         data = read_data_from_excel(word, i+1)
         data_dict = data.to_dict('list')
         for key in data_dict.keys():
@@ -45,14 +46,6 @@ def get_all_data(word):
     return dict
 
 
-dict = get_all_data('A')
-
-width = dict['item_width']
-length = dict['item_length']
-max_wide = np.argmax(np.array(width))
-max_length = np.argmax(np.array(length))
-
-data_for_storage = pd.DataFrame(dict)
-data_for_storage.to_excel('data_all.xlsx')
-
-pass
+# dict = get_all_data('A')
+# data_for_storage = pd.DataFrame(dict)
+# data_for_storage.to_excel('data_all.xlsx')

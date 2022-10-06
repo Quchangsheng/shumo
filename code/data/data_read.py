@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pandas as pd
 import os
+import numpy as np
 import copy
 
 def read_data_from_excel(word, num):
@@ -44,4 +45,14 @@ def get_all_data(word):
     return dict
 
 
-get_all_data('A')
+dict = get_all_data('A')
+
+width = dict['item_width']
+length = dict['item_length']
+max_wide = np.argmax(np.array(width))
+max_length = np.argmax(np.array(length))
+
+data_for_storage = pd.DataFrame(dict)
+data_for_storage.to_excel('data_all.xlsx')
+
+pass

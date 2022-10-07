@@ -1,10 +1,13 @@
 # This is a sample Python script.
 import copy
 import random
+from torch.utils.tensorboard import SummaryWriter
+import datetime
 
 from data.data_read import get_all_data
 from util import Item, Stack, Stripe, Flat, total_size
 from sum_tree import SumTree
+import util
 
 
 def get_items():
@@ -31,22 +34,7 @@ def get_items():
     return items
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    # make all data to dict
-    all_data_dict = get_all_data('A')
-
-    # 所有毛坯实例化为item，存入items列表
-    items = get_items()
-
-    # 生成sum_tree，并添加item，此时sum_tree的叶子节点以index为顺序
-    sum_tree = SumTree(len(items))
-    for item in items:
-        sum_tree.add(item.v_for_tree, item.index)
-
-    print('==========start making stripes==========')
-
-    # 产生stripes
+def get_stripes(items):
     stripes = []
     while True:  # 直到所有stack(item)都被使用
         # 是否所有item均被使用
@@ -90,7 +78,7 @@ if __name__ == '__main__':
                 # 防止原始items顺序被打乱
                 items_copy = copy.deepcopy(items)
                 items_copy.sort(key=lambda item_copy: item_copy.item_width)
-                items_copy.reverse()   # debug: copy_items顺序改变，items没变，正确
+                items_copy.reverse()  # debug: copy_items顺序改变，items没变，正确
 
                 # 可向上塞入的item_index
                 item_index = 1e6
@@ -128,13 +116,10 @@ if __name__ == '__main__':
         if len(stripe.stacks) > 0:
             stripes.append(stripe)
 
-    print('=============finish stripes=============')
-    print('===========start making flats===========')
+    return stripes
 
-    # 由stripes组成flat
-    # 将stripe按长度排序（面积不太合理）
-    stripes.sort(key=lambda stripe: stripe.length)
-    stripes.reverse()
+
+def get_flats(stripes):
     flats = []
     while True:
         # 如果所有stripe都被使用
@@ -154,14 +139,68 @@ if __name__ == '__main__':
         if len(flat.stripes) > 0:
             flats.append(flat)
 
-    print('==============finish flats==============')
-
-    total_using_rate = 0
-    for flat in flats:
-        total_using_rate += flat.using_rate
-    total_using_rate /= len(flats)
-
-    print('total_using_rate:', total_using_rate)
+    return flats
 
 
+def reset(items):
+    for item in items:
+        item.reset()
+    items.sort(key=lambda item: item.item_length)
+    # items.reverse()
+    items.sort(key=lambda item: item.item_width)
+    items.reverse()
+    for i in range(len(items)):
+        items[i].index = copy.deepcopy(i)
 
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    # init log writer
+    cur_time = datetime.datetime.now()
+    writer = SummaryWriter(f'./log/{cur_time.day}_{cur_time.hour}_{cur_time.minute}')
+
+    # make all data to dict
+    all_data_dict = get_all_data('A')
+
+    # 所有毛坯实例化为item，存入items列表
+    items = get_items()
+
+    for step in range(1000):
+        # 生成sum_tree，并添加item，此时sum_tree的叶子节点以index为顺序
+        sum_tree = SumTree(len(items))
+        for item in items:
+            sum_tree.add(item.v_for_tree, item.index)
+
+        print('==========start making stripes==========')
+
+        # 产生stripes
+        stripes = get_stripes(items)
+
+        print('=============finish stripes=============')
+        print('===========start making flats===========')
+
+        # 由stripes组成flat
+        # 将stripe按长度排序（面积不太合理）
+        stripes.sort(key=lambda stripe: stripe.length)
+        stripes.reverse()
+        flats = get_flats(stripes)
+
+        print('==============finish flats==============')
+
+        total_using_rate = 0
+        for flat in flats:
+            total_using_rate += flat.using_rate
+        total_using_rate = total_using_rate / int(len(flats))
+
+        print('total_using_rate:', total_using_rate)
+        writer.add_scalar('total_reward/red', total_using_rate, step)
+
+        # 更新价值并重置items，进行下一次迭代
+        flats.sort(key=lambda flat: flat.using_rate)
+        for bad_flat_index in range(int(len(flats) * util.BAD_RATE)):
+            for stripe in flats[bad_flat_index].stripes:
+                for stack in stripe.stacks:
+                    for item in stack.items:
+                        item.update_v(flats[bad_flat_index].using_rate)
+
+        reset(items)

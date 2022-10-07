@@ -1,7 +1,12 @@
 import copy
-
 import numpy as np
+
 total_size = {'length': 2440, 'width': 1220, 's': 2440*1220}
+LAMBDA_1 = 2
+LAMBDA_2 = 2
+BAD_RATE = 0.1
+BETA = 1
+G1, G2 = 0.8, 0.2
 
 
 class Item():
@@ -24,15 +29,25 @@ class Item():
 
         # 初始化价值
         if self.item_width > 0.5 * total_size['width']:
-            lambda_1 = 2
+            lambda_1 = LAMBDA_1
         else:
             lambda_1 = 1
         if self.item_length > 0.5 * total_size['length']:
-            lambda_2 = 2
+            lambda_2 = LAMBDA_2
         else:
             lambda_2 = 1
         self.v = lambda_1 * lambda_2 * self.s
         self.v_for_tree = copy.deepcopy(self.v) / 100
+
+    def reset(self):
+        # 调整长和宽
+        if self.item_width > self.item_length:
+            self.exchange_len_and_wid()
+        self.v_for_tree = copy.deepcopy(self.v) / 100
+        self.be_used = False
+
+    def update_v(self, using_rate):
+        self.v = G1 * self.v + G2 * pow(self.s, BETA) / using_rate
 
     @property
     def size(self):

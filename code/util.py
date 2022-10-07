@@ -1,7 +1,7 @@
 import copy
 
 import numpy as np
-total_size = {'length': 2440, 'width': 1220}
+total_size = {'length': 2440, 'width': 1220, 's': 2440*1220}
 
 
 class Item():
@@ -52,6 +52,7 @@ class Stack():
         self.items = []
         self.length = 0
         self.width = 0
+        self.s = 0
 
         self.be_used = False
 
@@ -66,11 +67,15 @@ class Stack():
 
     def update(self):
         length = 0
+        s = 0
         for item in self.items:
             length += item.item_length
         width = self.items[0].item_width
         self.length = length
         self.width = width
+        for item in self.items:
+            s += item.s
+        self.s = copy.deepcopy(s)
 
     def sort(self, len_or_wid='length'):
         assert len_or_wid in ['length', 'width']
@@ -89,6 +94,7 @@ class Stripe():
         self.stacks = []
         self.length = 0
         self.width = 0
+        self.s = self.length * self.width
 
         self.be_used = False
 
@@ -103,11 +109,15 @@ class Stripe():
 
     def update(self):
         width = 0
+        s = 0
         for stack in self.stacks:
             width += stack.width
         length = self.stacks[0].length
         self.length = length
         self.width = width
+        for stack in self.stacks:
+            s += stack.s
+        self.s = copy.deepcopy(s)
 
     @property
     def num_stacks(self):
@@ -119,6 +129,8 @@ class Flat():
         self.stripes = []
         self.length = 0
         self.width = 0
+        self.s = 0
+        self.using_rate = 0
 
         self.be_used = False
 
@@ -129,11 +141,16 @@ class Flat():
 
     def update(self):
         length = 0
+        s = 0
         for stripe in self.stripes:
             length += stripe.length
         width = self.stripes[0].width
         self.length = length
         self.width = width
+        for stripe in self.stripes:
+            s += stripe.s
+        self.s = copy.deepcopy(s)
+        self.using_rate = self.s / total_size['s']
 
     @property
     def num_strips(self):

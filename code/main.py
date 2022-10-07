@@ -44,6 +44,8 @@ if __name__ == '__main__':
     for item in items:
         sum_tree.add(item.v_for_tree, item.index)
 
+    print('==========start making stripes==========')
+
     # 产生stripes
     stripes = []
     while True:  # 直到所有stack(item)都被使用
@@ -127,8 +129,39 @@ if __name__ == '__main__':
             stripes.append(stripe)
 
     print('=============finish stripes=============')
+    print('===========start making flats===========')
 
     # 由stripes组成flat
-    
+    # 将stripe按长度排序（面积不太合理）
+    stripes.sort(key=lambda stripe: stripe.length)
+    stripes.reverse()
+    flats = []
+    while True:
+        # 如果所有stripe都被使用
+        stripe_be_used_count = 0
+        for stripe in stripes:
+            if stripe.be_used:
+                stripe_be_used_count += 1
+        if stripe_be_used_count == len(stripes):
+            break
+
+        flat = Flat()
+        # 面积从大到小找stripe填入flat
+        for stripe in stripes:
+            if not stripe.be_used and stripe.length + flat.length <= total_size['length']:
+                flat.add_stack(stripe)
+
+        if len(flat.stripes) > 0:
+            flats.append(flat)
+
+    print('==============finish flats==============')
+
+    total_using_rate = 0
+    for flat in flats:
+        total_using_rate += flat.using_rate
+    total_using_rate /= len(flats)
+
+    print('total_using_rate:', total_using_rate)
+
 
 

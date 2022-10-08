@@ -25,7 +25,7 @@ def read_data_from_excel(word, num):
     return data
 
 
-def get_all_data(word):
+def get_all_data(word, num):
     dict = {
         'index': [],
         'item_id': [],
@@ -35,11 +35,10 @@ def get_all_data(word):
         'item_width': [],
         'item_order': [],
     }
-    for i in range(4):
-        data = read_data_from_excel(word, i+1)
-        data_dict = data.to_dict('list')
-        for key in data_dict.keys():
-            dict[key].extend(data_dict[key])
+    data = read_data_from_excel(word, num)
+    data_dict = data.to_dict('list')
+    for key in data_dict.keys():
+        dict[key].extend(data_dict[key])
     for index in range(len(dict['item_id'])):
         dict['index'].append(index)
 

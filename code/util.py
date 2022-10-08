@@ -1,4 +1,5 @@
 import copy
+import math
 import numpy as np
 
 total_size = {'length': 2440, 'width': 1220, 's': 2440*1220}
@@ -6,10 +7,19 @@ LAMBDA_1 = 2
 LAMBDA_2 = 2
 BAD_RATE = 0.1
 BETA = 1
-G1, G2 = 0.8, 0.2
+G1, G2 = 0.6, 0.4   # 0.8, 0.2
+
+num = 1
+word = 'A'
 
 
 class Item():
+    """
+    length: x_length
+    width: y_length
+    初始化及重置时长边x(length)，短边y(width)
+    填充时可能旋转，此时交换x，y即可
+    """
     def __init__(self, index, item_id, item_material, item_num,
                  item_length, item_width, item_order):
         self.index = index
@@ -22,6 +32,9 @@ class Item():
 
         self.be_used = False
         self.s = self.item_length * self.item_width
+        self.x = 0
+        self.y = 0
+        self.flat_index = None
 
         # 调整长和宽
         if self.item_width > self.item_length:
@@ -32,10 +45,12 @@ class Item():
             lambda_1 = LAMBDA_1
         else:
             lambda_1 = 1
+        # lambda_2 = math.exp(self.item_length / 1000)
         if self.item_length > 0.5 * total_size['length']:
             lambda_2 = LAMBDA_2
         else:
             lambda_2 = 1
+
         self.v = lambda_1 * lambda_2 * self.s
         self.v_for_tree = copy.deepcopy(self.v) / 100
 
@@ -45,6 +60,8 @@ class Item():
             self.exchange_len_and_wid()
         self.v_for_tree = copy.deepcopy(self.v) / 100
         self.be_used = False
+        self.x = 0
+        self.y = 0
 
     def update_v(self, using_rate):
         self.v = G1 * self.v + G2 * pow(self.s, BETA) / using_rate
@@ -157,9 +174,11 @@ class Flat():
     def update(self):
         length = 0
         s = 0
+        width = 0
         for stripe in self.stripes:
             length += stripe.length
-        width = self.stripes[0].width
+            if stripe.width > width:
+                width = stripe.width
         self.length = length
         self.width = width
         for stripe in self.stripes:

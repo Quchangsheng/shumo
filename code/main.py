@@ -1,8 +1,10 @@
 # This is a sample Python script.
 import copy
+import os
 import random
 from torch.utils.tensorboard import SummaryWriter
 import datetime
+import pandas as pd
 
 from data.data_read import get_all_data
 from util import Item, Stack, Stripe, Flat, total_size
@@ -59,10 +61,7 @@ def get_stripes(items):
             # 采样一个item
             _, _, item_index = sum_tree.get_leaf(random.random() * sum_tree.total_p)
             item = items[item_index]
-            try:
-                assert not item.be_used, '采样到已经被使用的item，不合理！'
-            except:
-                pass
+            assert not item.be_used, '采样到已经被使用的item，不合理！'
 
             # 判断产生stack（能向上添加则产生stack）
             if item.item_width + stripe.width <= total_size['width'] and \
@@ -116,6 +115,14 @@ def get_stripes(items):
         if len(stripe.stacks) > 0:
             stripes.append(stripe)
 
+    # 检查strips
+    # for stripe in stripes:
+    #     for i in range(len(stripe.stacks)):
+    #         if stripe.stacks[0].length < stripe.stacks[i].length:
+    #             pass
+    #         if stripe.width > total_size['width']:
+    #             pass
+
     return stripes
 
 
@@ -153,6 +160,90 @@ def reset(items):
         items[i].index = copy.deepcopy(i)
 
 
+def check(flats):
+    for flat_index, flat in enumerate(flats):
+        if flat.length > total_size['length']:
+            print('')
+        if flat.width > total_size['width']:
+            print('')
+        length = 0
+        for stripe in flat.stripes:
+            length += stripe.length
+            if stripe.width > flat.width:
+                print('')
+        if length != flat.length:
+            print('')
+        for stripe_index, stripe in enumerate(flat.stripes):
+            if stripe.length > total_size['length']:
+                print('')
+            if stripe.width > total_size['width']:
+                print('')
+            if stripe.length != stripe.stacks[0].length:
+                print('')
+            width = 0
+            for stack in stripe.stacks:
+                width += stack.width
+            if stripe.width != width:
+                print('')
+            for stack in stripe.stacks:
+                if stripe.length < stack.length:
+                    print('')
+
+            for stack in stripe.stacks:
+                if stack.length > total_size['length']:
+                    print('')
+                if stack.width > total_size['width']:
+                    print('')
+                length = 0
+                for item in stack.items:
+                    if stack.width != item.item_width:
+                        print('')
+                    length += item.item_length
+                if stack.length != length:
+                    print('')
+
+def get_items_coordinate_and_make_final_dict(flats):
+    '''
+    :param flats: all flats -> list
+    give x & y to all items, including flat index
+    '''
+    final_dict = {
+        'item_material': [],
+        'flat_index': [],
+        'item_id': [],
+        'x': [],
+        'y': [],
+        'x_length': [],
+        'y_length': []
+    }
+
+    for flat_index, flat in enumerate(flats):
+        x_stripe = 0
+        for stripe_index, stripe in enumerate(flat.stripes):
+            y = 0
+            x_stripe += flat.stripes[stripe_index - 1].length if stripe_index >= 1 else 0
+            for stack_index, stack in enumerate(stripe.stacks):
+                y += stripe.stacks[stack_index - 1].width if stack_index >= 1 else 0
+                x_stack = 0
+                for item_index, item in enumerate(stack.items):
+                    x_stack += stack.items[item_index - 1].item_length if item_index >= 1 else 0
+
+                    item.x = copy.deepcopy(x_stripe + x_stack)
+                    item.y = copy.deepcopy(y)
+                    item.flat_index = copy.deepcopy(flat_index)
+
+                    # make final dict
+                    final_dict['item_material'].append(item.item_material)
+                    final_dict['flat_index'].append(item.flat_index)
+                    final_dict['item_id'].append(item.item_id)
+                    final_dict['x'].append(item.x)
+                    final_dict['y'].append(item.y)
+                    final_dict['x_length'].append(item.item_length)
+                    final_dict['y_length'].append(item.item_width)
+
+    return final_dict
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # init log writer
@@ -160,7 +251,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(f'./log/{cur_time.day}_{cur_time.hour}_{cur_time.minute}')
 
     # make all data to dict
-    all_data_dict = get_all_data('A')
+    all_data_dict = get_all_data(util.word, util.num)
 
     # 所有毛坯实例化为item，存入items列表
     items = get_items()
@@ -194,6 +285,15 @@ if __name__ == '__main__':
 
         print('total_using_rate:', total_using_rate)
         writer.add_scalar('total_reward/red', total_using_rate, step)
+        # check(flats)
+
+        # calculate coordinate for items
+        final_dict = get_items_coordinate_and_make_final_dict(flats)
+        # store .csv file as requested
+        final_df = pd.DataFrame(final_dict)
+        if not os.path.exists('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step)):
+            os.mkdir('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step))
+        final_df.to_csv('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step) + '/data.csv')
 
         # 更新价值并重置items，进行下一次迭代
         flats.sort(key=lambda flat: flat.using_rate)

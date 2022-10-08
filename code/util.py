@@ -11,6 +11,7 @@ G1, G2 = 0.6, 0.4   # 0.8, 0.2
 
 num = 1
 word = 'A'
+max_step = 1000
 
 
 class Item():
@@ -40,18 +41,25 @@ class Item():
         if self.item_width > self.item_length:
             self.exchange_len_and_wid()
 
+        # init params
+        self.lambda_1 = None
+        self.lambda_2 = None
+        self.beta = BETA
+        self.g1 = G1
+        self.g2 = G2
+
         # 初始化价值
         if self.item_width > 0.5 * total_size['width']:
-            lambda_1 = LAMBDA_1
+            self.lambda_1 = LAMBDA_1
         else:
-            lambda_1 = 1
+            self.lambda_1 = 1
         # lambda_2 = math.exp(self.item_length / 1000)
         if self.item_length > 0.5 * total_size['length']:
-            lambda_2 = LAMBDA_2
+            self.lambda_2 = LAMBDA_2
         else:
-            lambda_2 = 1
+            self.lambda_2 = 1
 
-        self.v = lambda_1 * lambda_2 * self.s
+        self.v = self.lambda_1 * self.lambda_2 * self.s
         self.v_for_tree = copy.deepcopy(self.v) / 100
 
     def reset(self):
@@ -64,7 +72,7 @@ class Item():
         self.y = 0
 
     def update_v(self, using_rate):
-        self.v = G1 * self.v + G2 * pow(self.s, BETA) / using_rate
+        self.v = self.g1 * self.v + self.g2 * pow(self.s, self.beta) / using_rate
 
     @property
     def size(self):

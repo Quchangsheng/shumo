@@ -10,9 +10,10 @@ from data.data_read import get_all_data
 from util import Item, Stack, Stripe, Flat, total_size
 from sum_tree import SumTree
 import util
+from plot import plot
 
 
-def get_items():
+def get_items(all_data_dict):
     '''
     :return: items 以宽降序排列，同宽下长度降序排列
     '''
@@ -36,7 +37,7 @@ def get_items():
     return items
 
 
-def get_stripes(items):
+def get_stripes(items, sum_tree):
     stripes = []
     while True:  # 直到所有stack(item)都被使用
         # 是否所有item均被使用
@@ -160,6 +161,85 @@ def reset(items):
         items[i].index = copy.deepcopy(i)
 
 
+def bayesian_optimization(**params):
+    # init params
+    params = {
+        'lambda_1': params['lambda_1'],
+        'lambda_2': params['lambda_2'],
+        'bad_rate': params['bad_rate'],
+        'beta': params['beta'],
+        'g1': params['g1'],
+        'g2': params['g2'],
+    }
+
+    total_using_rate = train(items, util.max_step, params)
+
+    return total_using_rate
+
+
+def train(items, train_max_step, params):
+    assert train_max_step > 0, 'train step 应大于 0！'
+    # assign value to params
+    for item in items:
+        item.lambda_1 = params['lambda_1']
+        item.lambda_2 = params['lambda_2']
+        item.beta = params['beta']
+        item.g1 = params['g1']
+        item.g2 = params['g2']
+
+    for step in range(train_max_step):
+        # 生成sum_tree，并添加item，此时sum_tree的叶子节点以index为顺序
+        sum_tree = SumTree(len(items))
+        for item in items:
+            sum_tree.add(item.v_for_tree, item.index)
+
+        print('==========start making stripes==========')
+
+        # 产生stripes
+        stripes = get_stripes(items, sum_tree)
+
+        print('=============finish stripes=============')
+        print('===========start making flats===========')
+
+        # 由stripes组成flat
+        # 将stripe按长度排序（面积不太合理）
+        stripes.sort(key=lambda stripe: stripe.length)
+        stripes.reverse()
+        flats = get_flats(stripes)
+
+        print('==============finish flats==============')
+
+        total_using_rate = 0
+        for flat in flats:
+            total_using_rate += flat.using_rate
+        total_using_rate = total_using_rate / int(len(flats))
+
+        print('total_using_rate:', total_using_rate)
+        writer.add_scalar('total_reward/red', total_using_rate, step)
+        # check(flats)
+
+        # calculate coordinate for items
+        final_dict = get_items_coordinate_and_make_final_dict(flats)
+        # store .csv file as requested
+        final_df = pd.DataFrame(final_dict)
+        store_path = './result/' + '数据集' + util.word + str(util.num) + '/step' + str(step)
+        if not os.path.exists(store_path):
+            os.mkdir(store_path)
+        final_df.to_csv(store_path + '/data.csv')
+
+        # 更新价值并重置items，进行下一次迭代
+        flats.sort(key=lambda flat: flat.using_rate)
+        for bad_flat_index in range(int(len(flats) * params['bad_rate'])):
+            for stripe in flats[bad_flat_index].stripes:
+                for stack in stripe.stacks:
+                    for item in stack.items:
+                        item.update_v(flats[bad_flat_index].using_rate)
+
+        reset(items)
+
+    return total_using_rate
+
+
 def check(flats):
     for flat_index, flat in enumerate(flats):
         if flat.length > total_size['length']:
@@ -201,6 +281,7 @@ def check(flats):
                     length += item.item_length
                 if stack.length != length:
                     print('')
+
 
 def get_items_coordinate_and_make_final_dict(flats):
     '''
@@ -254,53 +335,17 @@ if __name__ == '__main__':
     all_data_dict = get_all_data(util.word, util.num)
 
     # 所有毛坯实例化为item，存入items列表
-    items = get_items()
+    items = get_items(all_data_dict)
 
-    for step in range(1000):
-        # 生成sum_tree，并添加item，此时sum_tree的叶子节点以index为顺序
-        sum_tree = SumTree(len(items))
-        for item in items:
-            sum_tree.add(item.v_for_tree, item.index)
+    params = {
+        'lambda_1': util.LAMBDA_1,
+        'lambda_2': util.LAMBDA_2,
+        'bad_rate': util.BAD_RATE,
+        'beta': util.BETA,
+        'g1': util.G1,
+        'g2': util.G2,
+    }
 
-        print('==========start making stripes==========')
+    total_using_rate = train(items, util.max_step, params)
 
-        # 产生stripes
-        stripes = get_stripes(items)
-
-        print('=============finish stripes=============')
-        print('===========start making flats===========')
-
-        # 由stripes组成flat
-        # 将stripe按长度排序（面积不太合理）
-        stripes.sort(key=lambda stripe: stripe.length)
-        stripes.reverse()
-        flats = get_flats(stripes)
-
-        print('==============finish flats==============')
-
-        total_using_rate = 0
-        for flat in flats:
-            total_using_rate += flat.using_rate
-        total_using_rate = total_using_rate / int(len(flats))
-
-        print('total_using_rate:', total_using_rate)
-        writer.add_scalar('total_reward/red', total_using_rate, step)
-        # check(flats)
-
-        # calculate coordinate for items
-        final_dict = get_items_coordinate_and_make_final_dict(flats)
-        # store .csv file as requested
-        final_df = pd.DataFrame(final_dict)
-        if not os.path.exists('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step)):
-            os.mkdir('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step))
-        final_df.to_csv('result/' + '数据集' + util.word + str(util.num) + '/step' + str(step) + '/data.csv')
-
-        # 更新价值并重置items，进行下一次迭代
-        flats.sort(key=lambda flat: flat.using_rate)
-        for bad_flat_index in range(int(len(flats) * util.BAD_RATE)):
-            for stripe in flats[bad_flat_index].stripes:
-                for stack in stripe.stacks:
-                    for item in stack.items:
-                        item.update_v(flats[bad_flat_index].using_rate)
-
-        reset(items)
+    # plot(util.word, util.num)

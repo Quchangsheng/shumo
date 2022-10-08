@@ -6,6 +6,9 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib
 
+import util
+
+
 def read_csv(word, num, step):
     '''
     :param word: 'A' or 'B'
@@ -47,7 +50,7 @@ def get_patterns(word, num, step):
 def plot(word, num):
     path = os.getcwd()   # E:\比赛\数学建模\shumo\code
     path1 = path + '/result/' + '数据集' + word + str(num)
-    for step in range(40):
+    for step in range(util.max_step):
         path = path1 + '/step' + str(step) + '/view'
         dict = get_patterns(word, num, step)
         num_patterns = dict['flat_index'][-1] + 1

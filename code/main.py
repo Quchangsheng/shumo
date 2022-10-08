@@ -2,6 +2,8 @@
 import copy
 import os
 import random
+
+import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 import datetime
 import pandas as pd
@@ -187,6 +189,7 @@ def train(items, train_max_step, params):
         item.g1 = params['g1']
         item.g2 = params['g2']
 
+    total_using_rate_steps = np.zeros(util.max_step)
     for step in range(train_max_step):
         # 生成sum_tree，并添加item，此时sum_tree的叶子节点以index为顺序
         sum_tree = SumTree(len(items))
@@ -213,6 +216,7 @@ def train(items, train_max_step, params):
         for flat in flats:
             total_using_rate += flat.using_rate
         total_using_rate = total_using_rate / int(len(flats))
+        total_using_rate_steps[step] = total_using_rate
 
         print('total_using_rate:', total_using_rate)
         writer.add_scalar('total_reward/red', total_using_rate, step)
@@ -222,7 +226,7 @@ def train(items, train_max_step, params):
         final_dict = get_items_coordinate_and_make_final_dict(flats)
         # store .csv file as requested
         final_df = pd.DataFrame(final_dict)
-        store_path = './result/' + '数据集' + util.word + str(util.num) + '/step' + str(step)
+        store_path = './result/' + '数据集' + util.word + str(util.num) + '/step' + str(step) + '_' + str(total_using_rate)
         if not os.path.exists(store_path):
             os.mkdir(store_path)
         final_df.to_csv(store_path + '/data.csv')
@@ -237,7 +241,7 @@ def train(items, train_max_step, params):
 
         reset(items)
 
-    return total_using_rate
+    return total_using_rate, total_using_rate_steps
 
 
 def check(flats):
@@ -346,6 +350,9 @@ if __name__ == '__main__':
         'g2': util.G2,
     }
 
-    total_using_rate = train(items, util.max_step, params)
+    total_using_rate, total_using_rate_steps = train(items, util.max_step, params)
+
+    print('最高材料利用率的step: ', np.argmax(total_using_rate_steps))
+    print('最高材料利用率的step: ', np.max(total_using_rate_steps))
 
     # plot(util.word, util.num)

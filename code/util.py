@@ -53,20 +53,20 @@ class Item():
             self.lambda_1 = LAMBDA_1
         else:
             self.lambda_1 = 1
-        # lambda_2 = math.exp(self.item_length / 1000)
+        # self.lambda_2 = math.exp(self.item_length / 1000)
         if self.item_length > 0.5 * total_size['length']:
             self.lambda_2 = LAMBDA_2
         else:
             self.lambda_2 = 1
 
         self.v = self.lambda_1 * self.lambda_2 * self.s
-        self.v_for_tree = copy.deepcopy(self.v) / 100
+        self.v_for_tree = copy.deepcopy(self.v) / 10000
 
     def reset(self):
         # 调整长和宽
         if self.item_width > self.item_length:
             self.exchange_len_and_wid()
-        self.v_for_tree = copy.deepcopy(self.v) / 100
+        self.v_for_tree = copy.deepcopy(self.v) / 10000
         self.be_used = False
         self.x = 0
         self.y = 0

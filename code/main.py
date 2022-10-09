@@ -174,9 +174,15 @@ def bayesian_optimization(**params):
         'g2': params['g2'],
     }
 
-    total_using_rate = train(items, util.max_step, params)
+    # make all data to dict
+    all_data_dict = get_all_data(util.word, util.num)
 
-    return total_using_rate
+    # 所有毛坯实例化为item，存入items列表
+    items = get_items(all_data_dict)
+
+    total_using_rate, total_using_rate_steps = train(items, util.max_step, params)
+
+    return np.max(total_using_rate_steps)
 
 
 def train(items, train_max_step, params):

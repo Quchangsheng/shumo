@@ -3,15 +3,17 @@ import math
 import numpy as np
 
 total_size = {'length': 2440, 'width': 1220, 's': 2440*1220}
-LAMBDA_1 = 2
-LAMBDA_2 = 2
-BAD_RATE = 0.1
-BETA = 1
-G1, G2 = 0.6, 0.4   # 0.8, 0.2
+Q2_BATCH_MAX_NUM = 1000
+Q2_BATCH_MAX_S = 250 * 1e6
+LAMBDA_1 = 4.26
+LAMBDA_2 = 8.58
+BAD_RATE = 0.4
+BETA = 1.06
+G1, G2 = 0.38, 0.49   # 0.8, 0.2
 
 num = 1
-word = 'A'
-max_step = 1000
+word = 'B'
+max_step = 2
 
 
 class Item():
@@ -32,6 +34,7 @@ class Item():
         self.item_order = item_order
 
         self.be_used = False
+        self.be_maked_order = False
         self.s = self.item_length * self.item_width
         self.x = 0
         self.y = 0
@@ -197,3 +200,74 @@ class Flat():
     @property
     def num_strips(self):
         return len(self.stripes)
+
+
+class Order():
+    def __init__(self, order_num):
+        self.items = []
+        self.order_num = order_num   # 从1开始
+        self.material_dict = {}
+        self.total_item_s = 0
+        self.total_item_num = 0
+
+        self.be_added = False
+
+    def add_item(self, item):
+        self.items.append(item)
+        try:
+            self.material_dict[item.item_material].append(item)
+            item.be_maked_order = True
+        except:
+            self.material_dict[item.item_material] = []
+            self.material_dict[item.item_material].append(item)
+            item.be_maked_order = True
+
+        self.update()
+
+    def update(self):
+        s = 0
+        for item in self.items:
+            s += item.s
+        self.total_item_s = s
+        self.total_item_num = len(self.items)
+
+    def get_items_acc_material(self, item_material):
+        try:
+            return self.material_dict[item_material]
+        except:
+            return []
+
+
+class Batch():
+    def __init__(self, batch_num):
+        self.orders = []
+        self.batch_num = batch_num
+        self.total_item_s = 0
+        self.total_item_num = 0
+
+    def add_order(self, order):   # 输入类实例
+        self.orders.append(order)
+        self.update()
+
+    def add_orders(self, orders):  # 输入类实例list
+        self.orders.extend(orders)
+        self.update()
+
+    def update(self):
+        s, num = 0, 0
+        for order in self.orders:
+            s += order.total_item_s
+            num += order.total_item_num
+            order.be_added = True
+        self.total_item_s = s
+        self.total_item_num = num
+
+    def get_items_acc_material(self, item_material):
+        items_material = []
+        for order in self.orders:
+            items_material.extend(order.get_items_acc_material(item_material))
+        return items_material
+
+
+
+

@@ -22,7 +22,7 @@ def read_csv(word, num, step):
     else:
         question = 2
 
-    path = './result/' + '数据集' + word + str(num) + '/step' + '0_0.6905137664016937' + '/data.csv'
+    path = './result/' + '数据集' + word + str(num) + '/data_0.6995490552468635.csv'
     print('读取文件路径为: ', path)
     data = pd.read_csv(path)
     return data
@@ -75,7 +75,7 @@ def plot(word, num):
 def plot_b(word, num):
     path1 = './result/' + '数据集' + word + str(num)
 
-    path = path1 + '/data_0.6997202136555108.csv'
+    path = path1 + '/data_0.6995490552468635.csv'
 
     dict = {
         'Unnamed: 0': [],
@@ -100,7 +100,7 @@ def plot_b(word, num):
     data_dict = data.to_dict('list')
     for key in data_dict.keys():
         dict[key].extend(data_dict[key])
-    for b in range(dict['batch_index'][-1]):
+    for b in range(dict['batch_index'][-1]+1):
         index = []
         for i in range(len(dict['y'])):
             if dict['batch_index'][i]==b:
@@ -152,5 +152,5 @@ def plot_b(word, num):
     #     # plt.show()
 
 if __name__ == '__main__':
-    plot('A', 1)
+    plot_b('B', 2)
 

@@ -630,10 +630,12 @@ if __name__ == '__main__':
 
         # all batches using rate
         s = 0
+        flat_num = 0
         for flats_batch in flats_batches:
+            flat_num += len(flats_batch)
             for flat in flats_batch:
                 s += flat.s
-        batches_using_rate = s / (len(flats_batches) * total_size['s'])
+        batches_using_rate = s / (flat_num * total_size['s'])
         print('all batches', ': ', batches_using_rate)
 
         # 检查item数量，给item添加批次属性

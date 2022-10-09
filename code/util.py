@@ -11,9 +11,9 @@ BAD_RATE = 0.4
 BETA = 1.06
 G1, G2 = 0.38, 0.49   # 0.8, 0.2
 
-num = 1
+num = 4
 word = 'B'
-max_step = 2
+max_step = 50
 
 
 class Item():
@@ -161,6 +161,9 @@ class Stripe():
         for stack in self.stacks:
             s += stack.s
         self.s = copy.deepcopy(s)
+
+        if self.length > 0.9 * total_size['length']:
+            self.length = total_size['length']
 
     @property
     def num_stacks(self):

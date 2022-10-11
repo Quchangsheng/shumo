@@ -22,7 +22,7 @@ def read_csv(word, num, step):
     else:
         question = 2
 
-    path = './result/' + '数据集' + word + str(num) + '/data_0.6995490552468635.csv'
+    path = './result/' + '数据集' + word + str(num) + '/step3_0.7074696757604041' + '/data.csv'
     print('读取文件路径为: ', path)
     data = pd.read_csv(path)
     return data
@@ -49,7 +49,7 @@ def get_patterns(word, num, step):
 def plot(word, num):
     path1 = './result/' + '数据集' + word + str(num)
     for step in range(1):
-        path = path1 + '/step' + '0_0.6905137664016937' + '/view'
+        path = path1 + '/step' + '3_0.7074696757604041' + '/view'
         dict = get_patterns(word, num, step)
         num_patterns = dict['flat_index'][-1] + 1
         colors = ['b', 'g', 'r', 'y', 'm', 'k']
@@ -75,7 +75,7 @@ def plot(word, num):
 def plot_b(word, num):
     path1 = './result/' + '数据集' + word + str(num)
 
-    path = path1 + '/data_0.6995490552468635.csv'
+    path = path1 + '/data_0.6997202136555108.csv'
 
     dict = {
         'Unnamed: 0': [],
@@ -106,26 +106,27 @@ def plot_b(word, num):
             if dict['batch_index'][i]==b:
                 index.append(i)
         num_patterns = dict['flat_index'][index[-1]] + 1
-        colors = ['b', 'g', 'r', 'y', 'm', 'k']
-        for j in range(num_patterns):
-            fig, ax = plt.subplots()
-            ax.set_title(dict['item_material'][index[0]])
-            ax.set_xlim(0, 2440)
-            ax.set_ylim(0, 1220)
-            current_axis = fig.gca()
-            for item in index:
-                if dict['flat_index'][item]==j:
-                    rect = matplotlib.patches.Rectangle((dict['x'][item], dict['y'][item]), dict['x_length'][item],
-                                                        dict['y_length'][item], facecolor=colors[item % 6])
-                    rectangles = {str(dict['item_id'][item]): rect}
-                    ax.add_artist(rectangles[str(dict['item_id'][item])])
-                    rx, ry = rectangles[str(dict['item_id'][item])].get_xy()
-                    cx = rx + rectangles[str(dict['item_id'][item])].get_width() / 2.0
-                    cy = ry + rectangles[str(dict['item_id'][item])].get_height() / 2.0
-                    ax.annotate(str(dict['item_id'][item]), (cx, cy), color='w', weight='bold',
-                                fontsize=12, ha='center', va='center')
-            plt.savefig(path1 + '/batch' + str(b) + 'flat' + str(j) + '.jpg')
-            # plt.show()
+        print(num_patterns)
+        # colors = ['b', 'g', 'r', 'y', 'm', 'k']
+        # for j in range(num_patterns):
+        #     fig, ax = plt.subplots()
+        #     ax.set_title(dict['item_material'][index[0]])
+        #     ax.set_xlim(0, 2440)
+        #     ax.set_ylim(0, 1220)
+        #     current_axis = fig.gca()
+        #     for item in index:
+        #         if dict['flat_index'][item]==j:
+        #             rect = matplotlib.patches.Rectangle((dict['x'][item], dict['y'][item]), dict['x_length'][item],
+        #                                                 dict['y_length'][item], facecolor=colors[item % 6])
+        #             rectangles = {str(dict['item_id'][item]): rect}
+        #             ax.add_artist(rectangles[str(dict['item_id'][item])])
+        #             rx, ry = rectangles[str(dict['item_id'][item])].get_xy()
+        #             cx = rx + rectangles[str(dict['item_id'][item])].get_width() / 2.0
+        #             cy = ry + rectangles[str(dict['item_id'][item])].get_height() / 2.0
+        #             ax.annotate(str(dict['item_id'][item]), (cx, cy), color='w', weight='bold',
+        #                         fontsize=12, ha='center', va='center')
+        #     plt.savefig(path1 + '/batch' + str(b) + 'flat' + str(j) + '.jpg')
+        #     # plt.show()
 
 
 
@@ -152,5 +153,5 @@ def plot_b(word, num):
     #     # plt.show()
 
 if __name__ == '__main__':
-    plot_b('B', 2)
+    plot('A', 1)
 

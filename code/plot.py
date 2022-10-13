@@ -107,26 +107,26 @@ def plot_b(word, num):
                 index.append(i)
         num_patterns = dict['flat_index'][index[-1]] + 1
         print(num_patterns)
-        # colors = ['b', 'g', 'r', 'y', 'm', 'k']
-        # for j in range(num_patterns):
-        #     fig, ax = plt.subplots()
-        #     ax.set_title(dict['item_material'][index[0]])
-        #     ax.set_xlim(0, 2440)
-        #     ax.set_ylim(0, 1220)
-        #     current_axis = fig.gca()
-        #     for item in index:
-        #         if dict['flat_index'][item]==j:
-        #             rect = matplotlib.patches.Rectangle((dict['x'][item], dict['y'][item]), dict['x_length'][item],
-        #                                                 dict['y_length'][item], facecolor=colors[item % 6])
-        #             rectangles = {str(dict['item_id'][item]): rect}
-        #             ax.add_artist(rectangles[str(dict['item_id'][item])])
-        #             rx, ry = rectangles[str(dict['item_id'][item])].get_xy()
-        #             cx = rx + rectangles[str(dict['item_id'][item])].get_width() / 2.0
-        #             cy = ry + rectangles[str(dict['item_id'][item])].get_height() / 2.0
-        #             ax.annotate(str(dict['item_id'][item]), (cx, cy), color='w', weight='bold',
-        #                         fontsize=12, ha='center', va='center')
-        #     plt.savefig(path1 + '/batch' + str(b) + 'flat' + str(j) + '.jpg')
-        #     # plt.show()
+        colors = ['b', 'g', 'r', 'y', 'm', 'k']
+        for j in range(num_patterns):
+            fig, ax = plt.subplots()
+            ax.set_title(dict['item_material'][index[0]])
+            ax.set_xlim(0, 2440)
+            ax.set_ylim(0, 1220)
+            current_axis = fig.gca()
+            for item in index:
+                if dict['flat_index'][item]==j:
+                    rect = matplotlib.patches.Rectangle((dict['x'][item], dict['y'][item]), dict['x_length'][item],
+                                                        dict['y_length'][item], facecolor=colors[item % 6])
+                    rectangles = {str(dict['item_id'][item]): rect}
+                    ax.add_artist(rectangles[str(dict['item_id'][item])])
+                    rx, ry = rectangles[str(dict['item_id'][item])].get_xy()
+                    cx = rx + rectangles[str(dict['item_id'][item])].get_width() / 2.0
+                    cy = ry + rectangles[str(dict['item_id'][item])].get_height() / 2.0
+                    ax.annotate(str(dict['item_id'][item]), (cx, cy), color='w', weight='bold',
+                                fontsize=12, ha='center', va='center')
+            plt.savefig(path1 + '/batch' + str(b) + 'flat' + str(j) + '.jpg')
+            # plt.show()
 
 
 
@@ -153,5 +153,5 @@ def plot_b(word, num):
     #     # plt.show()
 
 if __name__ == '__main__':
-    plot('A', 1)
+    plot_b('B', 5)
 

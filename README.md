@@ -6,3 +6,5 @@ optimizing the value of the sheet and the selection order.
 Group Batch Problem：The solution model of iterative optimization method for order group batch and nesting problem is proposed,
 which considers the strong coupling relationship between order group batch and nesting optimization. This method allows the layout
 results of each batch to provide feedback and adjust the generation of the next batch, continuously optimizing the batching process.
+
+PLEASE USE THE 'code' PART
